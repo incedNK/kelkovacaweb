@@ -585,9 +585,45 @@ def main_page(session: Session= Depends(config.get_session)) -> None:
                 ui.button(icon='settings', on_click=admin_dialog.open).props('round')
 
 @router.page('/fig/{id}')
-def fig(id: int):
+def fig(id: int, session: Session= Depends(config.get_session)):
     with user_frame():
-        ui.label(id)         
+        ui.label(f'Sensor: {id}').classes('font-bold self-center')
+        date = []
+        temperature = []
+        moisture = []
+        battery = []
+        data = session.query(models.SensorData).filter(models.SensorData.sensor_id == id).all()     
+        for x in data:
+            date.append(x.date.strftime('%d-%m-%y'))
+            temperature.append(x.temperature)
+            moisture.append(x.moisture)
+            battery.append(x.battery)
+        ui.echart({
+            'xAxis': {'data': date},
+            'yAxis': {},
+            'legend':{
+                'textStyle': {'color': 'gray'},
+                'orient': 'vertical',
+                'right': 10,
+                'top': 'center'
+            },
+            'series': [{
+                'name': 'Temperature',
+                'data': temperature,
+                'type': 'line'
+            },
+            {
+                'name': 'Moisture',
+                'data': moisture,
+                'type': 'line'  
+            },
+            {
+                'name': 'Battery',
+                'data': battery,
+                'type': 'line'
+            },
+            ]    
+        }).classes('h-96')
         
 @router.page('/alerts')    
 def admin_alerts(session: Session= Depends(config.get_session)) -> None:
